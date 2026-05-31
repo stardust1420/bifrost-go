@@ -1,4 +1,4 @@
-module bifrost-go
+module github.com/stardust1420/bifrost-go
 
 go 1.24.0
 
