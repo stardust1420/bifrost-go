@@ -50,17 +50,17 @@ type Value struct {
 }
 
 type Key struct {
-	ID         int64     `json:"id"`
-	Name       string    `json:"name"`
-	ProviderID int64     `json:"provider_id"`
-	Provider   string    `json:"provider"`
-	KeyID      string    `json:"key_id"`
-	Value      Value     `json:"value"`
-	Models     []string  `json:"models"`
-	Weight     int64     `json:"weight"`
-	Enabled    bool      `json:"enabled"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ProviderID  int64     `json:"provider_id"`
+	Provider    string    `json:"provider"`
+	KeyID       string    `json:"key_id"`
+	Models      []string  `json:"models"`
+	Weight      int64     `json:"weight"`
+	Enabled     bool      `json:"enabled"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type ProviderConfig struct {
@@ -245,11 +245,105 @@ func (c *Client) CreateVirtualKey(r CreateVirtualKeyReq) (VirtualKey, error) {
 		return VirtualKey{}, errors.Wrap(err, "Failed to create virtual key")
 	}
 
-	var vk VirtualKey
-	err = json.Unmarshal(res, &vk)
+	var createVirtualKeyRes struct {
+		Message    string     `json:"message"`
+		VirtualKey VirtualKey `json:"virtual_key"`
+	}
+	err = json.Unmarshal(res, &createVirtualKeyRes)
 	if err != nil {
 		return VirtualKey{}, errors.Wrap(err, "Failed to unmarshal customer data")
 	}
 
-	return vk, nil
+	return createVirtualKeyRes.VirtualKey, nil
+}
+
+type CreateAKeyForAProviderReq struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Value       string   `json:"value"`
+	Models      []string `json:"models"`
+	Provider    string   `json:"provider"`
+}
+
+func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (Key, error) {
+	url := fmt.Sprintf("/api/providers/%s/keys", r.Provider)
+	type KeyReq struct {
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Value       string   `json:"value"`
+		Models      []string `json:"models"`
+	}
+	payload := KeyReq{
+		Name:        r.Name,
+		Description: r.Description,
+		Value:       r.Value,
+		Models:      r.Models,
+	}
+
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      POST,
+		Payload:     payload,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(args)
+	if err != nil {
+		return Key{}, errors.Wrap(err, "Failed to create virtual key")
+	}
+
+	var createAKeyForAProvider struct {
+		Message string `json:"message"`
+		Key     Key    `json:"key"`
+	}
+	err = json.Unmarshal(res, &createAKeyForAProvider)
+	if err != nil {
+		return Key{}, errors.Wrap(err, "Failed to unmarshal customer data")
+	}
+
+	return createAKeyForAProvider.Key, nil
+}
+
+type ProviderConfigReq struct {
+	Provider      string   `json:"provider"`
+	AllowedModels []string `json:"allowed_models"`
+	KeyIDs        []string `json:"key_ids"`
+}
+type UpdateVirtualKeyReq struct {
+	VirtualKeyID    string              `json:"virtual_key_id"`
+	CustomerID      string              `json:"customer_id"`
+	ProviderConfigs []ProviderConfigReq `json:"provider_configs"`
+}
+
+func (c *Client) UpdateVirtualKey(r UpdateVirtualKeyReq) (VirtualKey, error) {
+	url := fmt.Sprintf("/api/governance/virtual-keys/%s", r.VirtualKeyID)
+
+	type VirtualKeyReq struct {
+		CustomerID      string              `json:"customer_id"`
+		ProviderConfigs []ProviderConfigReq `json:"provider_configs"`
+	}
+	payload := VirtualKeyReq{
+		CustomerID:      r.CustomerID,
+		ProviderConfigs: r.ProviderConfigs,
+	}
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      PUT,
+		Payload:     payload,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(args)
+	if err != nil {
+		return VirtualKey{}, errors.Wrap(err, "Failed to update virtual key")
+	}
+
+	var updateVirtualKeyRes struct {
+		Message    string     `json:"message"`
+		VirtualKey VirtualKey `json:"virtual_key"`
+	}
+	err = json.Unmarshal(res, &updateVirtualKeyRes)
+	if err != nil {
+		return VirtualKey{}, errors.Wrap(err, "Failed to unmarshal customer data")
+	}
+
+	return updateVirtualKeyRes.VirtualKey, nil
 }
