@@ -74,6 +74,10 @@ type ProviderConfig struct {
 	Keys              []Key    `json:"keys"`
 }
 
+type Provider struct {
+	Name string `json:"name"`
+}
+
 // Http helper
 type httpMethod string
 
@@ -255,6 +259,31 @@ func (c *Client) CreateVirtualKey(r CreateVirtualKeyReq) (VirtualKey, error) {
 	}
 
 	return createVirtualKeyRes.VirtualKey, nil
+}
+
+func (c *Client) ListAllProviders() ([]Provider, error) {
+	url := "/api/providers"
+
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      GET,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(args)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to list customers")
+	}
+
+	var listProvidersRes struct {
+		Total     int64      `json:"total"`
+		Providers []Provider `json:"providers"`
+	}
+	err = json.Unmarshal(res, &listProvidersRes)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to unmarshal customer response")
+	}
+
+	return listProvidersRes.Providers, nil
 }
 
 type CreateAKeyForAProviderReq struct {
