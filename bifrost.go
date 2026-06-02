@@ -33,15 +33,14 @@ type Customer struct {
 }
 
 type VirtualKey struct {
-	ID              string           `json:"id"`
-	Value           string           `json:"value"`
-	Name            string           `json:"name"`
-	Description     string           `json:"description"`
-	CustomerID      string           `json:"customer_id"`
-	IsActive        bool             `json:"is_active"`
-	ProviderConfigs []ProviderConfig `json:"provider_configs"`
-	CreatedAt       time.Time        `json:"created_at"`
-	UpdatedAt       time.Time        `json:"updated_at"`
+	ID          string    `json:"id"`
+	Value       string    `json:"value"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CustomerID  string    `json:"customer_id"`
+	IsActive    bool      `json:"is_active"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type Value struct {
