@@ -352,10 +352,8 @@ func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (CreateAKey
 		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to create provider key")
 	}
 
-	fmt.Println(string(res))
-
 	var keyRes CreateAKeyForAProviderRes
-	err = json.Unmarshal(res, &res)
+	err = json.Unmarshal(res, &keyRes)
 	if err != nil {
 		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to unmarshal provider key data")
 	}
