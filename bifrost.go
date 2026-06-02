@@ -224,6 +224,34 @@ func (c *Client) ListCustomers() ([]Customer, error) {
 	return listCustomersRes.Customers, nil
 }
 
+type GetCustomerReq struct {
+	ID string `json:"id"`
+}
+
+func (c *Client) GetCustomer(r GetCustomerReq) (Customer, error) {
+	url := fmt.Sprintf("/api/governance/customers/%s", r.ID)
+
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      GET,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(args)
+	if err != nil {
+		return Customer{}, errors.Wrap(err, "Failed to get customer")
+	}
+
+	var getCustomerRes struct {
+		Customer Customer `json:"customer"`
+	}
+	err = json.Unmarshal(res, &getCustomerRes)
+	if err != nil {
+		return Customer{}, errors.Wrap(err, "Failed to unmarshal customer response")
+	}
+
+	return getCustomerRes.Customer, nil
+}
+
 type CreateVirtualKeyReq struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
