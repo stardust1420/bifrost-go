@@ -111,6 +111,7 @@ func httpHandler(args httpHandlerArgs) ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to marshal the request payload")
 		}
+		fmt.Println(string(payloadBytes))
 		body = bytes.NewReader(payloadBytes)
 	}
 
