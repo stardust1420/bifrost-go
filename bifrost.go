@@ -111,7 +111,6 @@ func httpHandler(args httpHandlerArgs) ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to marshal the request payload")
 		}
-		fmt.Println(string(payloadBytes))
 		body = bytes.NewReader(payloadBytes)
 	}
 
@@ -324,7 +323,11 @@ type CreateAKeyForAProviderReq struct {
 	Provider    string   `json:"provider"`
 }
 
-func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (Key, error) {
+type CreateAKeyForAProviderRes struct {
+	ID string `json:"id"`
+}
+
+func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (CreateAKeyForAProviderRes, error) {
 	url := fmt.Sprintf("/api/providers/%s/keys", r.Provider)
 	type KeyReq struct {
 		Name        string   `json:"name"`
@@ -347,19 +350,16 @@ func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (Key, error
 	}
 	res, err := httpHandler(args)
 	if err != nil {
-		return Key{}, errors.Wrap(err, "Failed to create virtual key")
+		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to create virtual key")
 	}
 
-	var createAKeyForAProvider struct {
-		Message string `json:"message"`
-		Key     Key    `json:"key"`
-	}
-	err = json.Unmarshal(res, &createAKeyForAProvider)
+	var keyRes CreateAKeyForAProviderRes
+	err = json.Unmarshal(res, &res)
 	if err != nil {
-		return Key{}, errors.Wrap(err, "Failed to unmarshal customer data")
+		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to unmarshal customer data")
 	}
 
-	return createAKeyForAProvider.Key, nil
+	return keyRes, nil
 }
 
 type ProviderConfigReq struct {
