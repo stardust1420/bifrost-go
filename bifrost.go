@@ -283,7 +283,7 @@ func (c *Client) CreateVirtualKey(r CreateVirtualKeyReq) (VirtualKey, error) {
 	}
 	err = json.Unmarshal(res, &createVirtualKeyRes)
 	if err != nil {
-		return VirtualKey{}, errors.Wrap(err, "Failed to unmarshal customer data")
+		return VirtualKey{}, errors.Wrap(err, "Failed to unmarshal virtual key data")
 	}
 
 	return createVirtualKeyRes.VirtualKey, nil
@@ -308,7 +308,7 @@ func (c *Client) ListAllProviders() ([]Provider, error) {
 	}
 	err = json.Unmarshal(res, &listProvidersRes)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to unmarshal customer response")
+		return nil, errors.Wrap(err, "Failed to unmarshal providers response")
 	}
 
 	return listProvidersRes.Providers, nil
@@ -349,13 +349,13 @@ func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (CreateAKey
 	}
 	res, err := httpHandler(args)
 	if err != nil {
-		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to create virtual key")
+		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to create provider key")
 	}
 
 	var keyRes CreateAKeyForAProviderRes
 	err = json.Unmarshal(res, &res)
 	if err != nil {
-		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to unmarshal customer data")
+		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to unmarshal provider key data")
 	}
 
 	return keyRes, nil
@@ -400,7 +400,7 @@ func (c *Client) UpdateVirtualKey(r UpdateVirtualKeyReq) (VirtualKey, error) {
 	}
 	err = json.Unmarshal(res, &updateVirtualKeyRes)
 	if err != nil {
-		return VirtualKey{}, errors.Wrap(err, "Failed to unmarshal customer data")
+		return VirtualKey{}, errors.Wrap(err, "Failed to unmarshal virtual key data")
 	}
 
 	return updateVirtualKeyRes.VirtualKey, nil
