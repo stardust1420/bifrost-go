@@ -427,7 +427,7 @@ type CreateAChatCompletionReq struct {
 
 type CreateAChatCompletionResChoice struct {
 	Index        int64                        `json:"index"`
-	FinishReason int64                        `json:"finish_reason"`
+	FinishReason string                       `json:"finish_reason"`
 	Message      CreateAChatCompletionMessage `json:"message"`
 }
 
