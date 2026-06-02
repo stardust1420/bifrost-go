@@ -122,11 +122,20 @@ func httpHandler(args httpHandlerArgs) ([]byte, error) {
 	// Request Headers
 	req.Header.Add("Content-Type", "application/json")
 
+	credentialsPresent := false
+
 	if args.Credentials.Username != "" && args.Credentials.Password != "" {
 		req.SetBasicAuth(args.Credentials.Username, args.Credentials.Password)
+		credentialsPresent = true
+
 	}
 	if args.Credentials.VirtualKey != "" {
 		req.Header.Add("x-bf-vk", args.Credentials.VirtualKey)
+		credentialsPresent = true
+	}
+
+	if !credentialsPresent {
+		return nil, errors.Wrap(err, "Credentials not found")
 	}
 
 	// Make request
@@ -404,4 +413,49 @@ func (c *Client) UpdateVirtualKey(r UpdateVirtualKeyReq) (VirtualKey, error) {
 	}
 
 	return updateVirtualKeyRes.VirtualKey, nil
+}
+
+type CreateAChatCompletionMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type CreateAChatCompletionReq struct {
+	Model    string                         `json:"model"`
+	Messages []CreateAChatCompletionMessage `json:"messages"`
+}
+
+type CreateAChatCompletionResChoice struct {
+	Index        int64                        `json:"index"`
+	FinishReason int64                        `json:"finish_reason"`
+	Message      CreateAChatCompletionMessage `json:"message"`
+}
+
+type CreateAChatCompletionRes struct {
+	ID      string                           `json:"id"`
+	Choices []CreateAChatCompletionResChoice `json:"choices"`
+}
+
+func (c *Client) CreateAChatCompletion(r CreateAChatCompletionReq) (CreateAChatCompletionRes, error) {
+	url := "/v1/chat/completions"
+
+	payload := r
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      POST,
+		Payload:     payload,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(args)
+	if err != nil {
+		return CreateAChatCompletionRes{}, errors.Wrap(err, "Failed to create a chat completion")
+	}
+
+	var chatRes CreateAChatCompletionRes
+	err = json.Unmarshal(res, &chatRes)
+	if err != nil {
+		return CreateAChatCompletionRes{}, errors.Wrap(err, "Failed to unmarshal chat completion")
+	}
+
+	return chatRes, nil
 }
