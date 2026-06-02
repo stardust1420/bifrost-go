@@ -27,8 +27,9 @@ type Credentials struct {
 }
 
 type Customer struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string       `json:"id"`
+	Name        string       `json:"name"`
+	VirtualKeys []VirtualKey `json:"virtual_keys"`
 }
 
 type VirtualKey struct {
