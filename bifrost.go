@@ -2,6 +2,7 @@ package bifrost
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -99,7 +100,7 @@ type httpHandlerArgs struct {
 	Credentials Credentials
 }
 
-func httpHandler(args httpHandlerArgs) ([]byte, error) {
+func httpHandler(ctx context.Context, args httpHandlerArgs) ([]byte, error) {
 	// Request URL
 	url := fmt.Sprintf("%s%s", args.Credentials.BaseURL, args.URL)
 
@@ -114,7 +115,7 @@ func httpHandler(args httpHandlerArgs) ([]byte, error) {
 	}
 
 	// Request
-	req, err := http.NewRequest(args.Method.ToString(), url, body)
+	req, err := http.NewRequestWithContext(ctx, args.Method.ToString(), url, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to create new http request")
 	}
@@ -176,7 +177,7 @@ type CreateCustomerReq struct {
 	Name string `json:"name"`
 }
 
-func (c *Client) CreateCustomer(r CreateCustomerReq) (Customer, error) {
+func (c *Client) CreateCustomer(ctx context.Context, r CreateCustomerReq) (Customer, error) {
 	url := "/api/governance/customers"
 	payload := Customer{
 		Name: r.Name,
@@ -188,7 +189,7 @@ func (c *Client) CreateCustomer(r CreateCustomerReq) (Customer, error) {
 		Payload:     payload,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return Customer{}, errors.Wrap(err, "Failed to create customer")
 	}
@@ -205,7 +206,7 @@ func (c *Client) CreateCustomer(r CreateCustomerReq) (Customer, error) {
 	return createCustomerRes.Customer, nil
 }
 
-func (c *Client) ListCustomers() ([]Customer, error) {
+func (c *Client) ListCustomers(ctx context.Context) ([]Customer, error) {
 	url := "/api/governance/customers"
 
 	args := httpHandlerArgs{
@@ -213,7 +214,7 @@ func (c *Client) ListCustomers() ([]Customer, error) {
 		Method:      GET,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to list customers")
 	}
@@ -237,7 +238,7 @@ type GetCustomerReq struct {
 	ID string `json:"id"`
 }
 
-func (c *Client) GetCustomer(r GetCustomerReq) (Customer, error) {
+func (c *Client) GetCustomer(ctx context.Context, r GetCustomerReq) (Customer, error) {
 	url := fmt.Sprintf("/api/governance/customers/%s", r.ID)
 
 	args := httpHandlerArgs{
@@ -245,7 +246,7 @@ func (c *Client) GetCustomer(r GetCustomerReq) (Customer, error) {
 		Method:      GET,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return Customer{}, errors.Wrap(err, "Failed to get customer")
 	}
@@ -264,15 +265,17 @@ func (c *Client) GetCustomer(r GetCustomerReq) (Customer, error) {
 type CreateVirtualKeyReq struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	CustomerID  string `json:"Customer_id"`
+	CustomerID  string `json:"customer_id"`
+	IsActive    bool   `json:"is_active"`
 }
 
-func (c *Client) CreateVirtualKey(r CreateVirtualKeyReq) (VirtualKey, error) {
+func (c *Client) CreateVirtualKey(ctx context.Context, r CreateVirtualKeyReq) (VirtualKey, error) {
 	url := "/api/governance/virtual-keys"
 	payload := VirtualKey{
 		Name:        r.Name,
 		Description: r.Description,
 		CustomerID:  r.CustomerID,
+		IsActive:    r.IsActive,
 	}
 
 	args := httpHandlerArgs{
@@ -281,7 +284,7 @@ func (c *Client) CreateVirtualKey(r CreateVirtualKeyReq) (VirtualKey, error) {
 		Payload:     payload,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return VirtualKey{}, errors.Wrap(err, "Failed to create virtual key")
 	}
@@ -298,7 +301,7 @@ func (c *Client) CreateVirtualKey(r CreateVirtualKeyReq) (VirtualKey, error) {
 	return createVirtualKeyRes.VirtualKey, nil
 }
 
-func (c *Client) ListAllProviders() ([]Provider, error) {
+func (c *Client) ListAllProviders(ctx context.Context) ([]Provider, error) {
 	url := "/api/providers"
 
 	args := httpHandlerArgs{
@@ -306,7 +309,7 @@ func (c *Client) ListAllProviders() ([]Provider, error) {
 		Method:      GET,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to list customers")
 	}
@@ -335,7 +338,7 @@ type CreateAKeyForAProviderRes struct {
 	ID string `json:"id"`
 }
 
-func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (CreateAKeyForAProviderRes, error) {
+func (c *Client) CreateAKeyForAProvider(ctx context.Context, r CreateAKeyForAProviderReq) (CreateAKeyForAProviderRes, error) {
 	url := fmt.Sprintf("/api/providers/%s/keys", r.Provider)
 	type KeyReq struct {
 		Name        string   `json:"name"`
@@ -356,7 +359,7 @@ func (c *Client) CreateAKeyForAProvider(r CreateAKeyForAProviderReq) (CreateAKey
 		Payload:     payload,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return CreateAKeyForAProviderRes{}, errors.Wrap(err, "Failed to create provider key")
 	}
@@ -381,7 +384,7 @@ type UpdateVirtualKeyReq struct {
 	ProviderConfigs []ProviderConfigReq `json:"provider_configs"`
 }
 
-func (c *Client) UpdateVirtualKey(r UpdateVirtualKeyReq) (VirtualKey, error) {
+func (c *Client) UpdateVirtualKey(ctx context.Context, r UpdateVirtualKeyReq) (VirtualKey, error) {
 	url := fmt.Sprintf("/api/governance/virtual-keys/%s", r.VirtualKeyID)
 
 	type VirtualKeyReq struct {
@@ -398,7 +401,7 @@ func (c *Client) UpdateVirtualKey(r UpdateVirtualKeyReq) (VirtualKey, error) {
 		Payload:     payload,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return VirtualKey{}, errors.Wrap(err, "Failed to update virtual key")
 	}
@@ -436,7 +439,7 @@ type CreateAChatCompletionRes struct {
 	Choices []CreateAChatCompletionResChoice `json:"choices"`
 }
 
-func (c *Client) CreateAChatCompletion(r CreateAChatCompletionReq) (CreateAChatCompletionRes, error) {
+func (c *Client) CreateAChatCompletion(ctx context.Context, r CreateAChatCompletionReq) (CreateAChatCompletionRes, error) {
 	url := "/v1/chat/completions"
 
 	payload := r
@@ -446,7 +449,7 @@ func (c *Client) CreateAChatCompletion(r CreateAChatCompletionReq) (CreateAChatC
 		Payload:     payload,
 		Credentials: c.Credentials,
 	}
-	res, err := httpHandler(args)
+	res, err := httpHandler(ctx, args)
 	if err != nil {
 		return CreateAChatCompletionRes{}, errors.Wrap(err, "Failed to create a chat completion")
 	}
