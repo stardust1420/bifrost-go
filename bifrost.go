@@ -34,14 +34,16 @@ type Customer struct {
 }
 
 type VirtualKey struct {
-	ID          string    `json:"id"`
-	Value       string    `json:"value"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CustomerID  string    `json:"customer_id"`
-	IsActive    bool      `json:"is_active"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID              string           `json:"id"`
+	Value           string           `json:"value"`
+	Name            string           `json:"name"`
+	Description     string           `json:"description"`
+	CustomerID      string           `json:"customer_id"`
+	IsActive        bool             `json:"is_active"`
+	ProviderConfigs []ProviderConfig `json:"provider_configs"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Value struct {
@@ -68,7 +70,7 @@ type ProviderConfig struct {
 	ID                int64    `json:"id"`
 	VirtualKeyID      string   `json:"virtual_key_id"`
 	Provider          string   `json:"provider"`
-	Weight            int64    `json:"weight"`
+	Weight            *int64   `json:"weight"`
 	AllowedModels     []string `json:"allowed_models"`
 	BlacklistedModels []string `json:"blacklisted_models"`
 	AllowAllKeys      bool     `json:"allow_all_keys"`
@@ -299,6 +301,34 @@ func (c *Client) CreateVirtualKey(ctx context.Context, r CreateVirtualKeyReq) (V
 	}
 
 	return createVirtualKeyRes.VirtualKey, nil
+}
+
+type GetVirtualKeyReq struct {
+	ID string `json:"id"`
+}
+
+func (c *Client) GetVirtualKey(ctx context.Context, r GetVirtualKeyReq) (VirtualKey, error) {
+	url := fmt.Sprintf("/api/governance/virtual-keys/%s", r.ID)
+
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      GET,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(ctx, args)
+	if err != nil {
+		return VirtualKey{}, errors.Wrap(err, "Failed to get virtual key")
+	}
+
+	var getVirtualKeyRes struct {
+		VirtualKey VirtualKey `json:"virtual_key"`
+	}
+	err = json.Unmarshal(res, &getVirtualKeyRes)
+	if err != nil {
+		return VirtualKey{}, errors.Wrap(err, "Failed to unmarshal virtual key response")
+	}
+
+	return getVirtualKeyRes.VirtualKey, nil
 }
 
 func (c *Client) ListAllProviders(ctx context.Context) ([]Provider, error) {
