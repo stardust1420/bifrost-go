@@ -110,7 +110,17 @@ type GetASpecificKeyForAProviderReq struct {
 	KeyID    string `json:"key_id"`
 }
 
-func (c *Client) GetASpecificKeyForAProvider(ctx context.Context, r GetASpecificKeyForAProviderReq) (Key, error) {
+// Use the below struct instead of Key because the below API returns KeyID in id which have different types
+type GetASpecificKeyForAProviderRes struct {
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	Value   Value    `json:"value"`
+	Models  []string `json:"models"`
+	Weight  int64    `json:"weight"`
+	Enabled bool     `json:"enabled"`
+}
+
+func (c *Client) GetASpecificKeyForAProvider(ctx context.Context, r GetASpecificKeyForAProviderReq) (GetASpecificKeyForAProviderRes, error) {
 	url := fmt.Sprintf("/api/providers/%s/keys/%s", r.Provider, r.KeyID)
 
 	args := httpHandlerArgs{
@@ -120,13 +130,13 @@ func (c *Client) GetASpecificKeyForAProvider(ctx context.Context, r GetASpecific
 	}
 	res, err := httpHandler(ctx, args)
 	if err != nil {
-		return Key{}, errors.Wrap(err, "Failed to update virtual key")
+		return GetASpecificKeyForAProviderRes{}, errors.Wrap(err, "Failed to get provider key")
 	}
 
-	var key Key
+	var key GetASpecificKeyForAProviderRes
 	err = json.Unmarshal(res, &key)
 	if err != nil {
-		return Key{}, errors.Wrap(err, "Failed to unmarshal virtual key data")
+		return GetASpecificKeyForAProviderRes{}, errors.Wrap(err, "Failed to unmarshal provider key data")
 	}
 
 	return key, nil
