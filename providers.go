@@ -141,3 +141,59 @@ func (c *Client) GetASpecificKeyForAProvider(ctx context.Context, r GetASpecific
 
 	return key, nil
 }
+
+type UpdateAKeyForAProviderReq struct {
+	Provider string                         `json:"provider"`
+	KeyID    string                         `json:"key_id"`
+	Key      GetASpecificKeyForAProviderRes `json:"key"`
+}
+
+func (c *Client) UpdateAKeyForAProvider(ctx context.Context, r UpdateAKeyForAProviderReq) (GetASpecificKeyForAProviderRes, error) {
+	url := fmt.Sprintf("/api/providers/%s/keys/%s", r.Provider, r.KeyID)
+
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      PUT,
+		Payload:     r.Key,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(ctx, args)
+	if err != nil {
+		return GetASpecificKeyForAProviderRes{}, errors.Wrap(err, "Failed to update a key for a provider")
+	}
+
+	var key GetASpecificKeyForAProviderRes
+	err = json.Unmarshal(res, &key)
+	if err != nil {
+		return GetASpecificKeyForAProviderRes{}, errors.Wrap(err, "Failed to unmarshal provider key data")
+	}
+
+	return key, nil
+}
+
+type DeleteAKeyFromAProviderReq struct {
+	Provider string `json:"provider"`
+	KeyID    string `json:"key_id"`
+}
+
+func (c *Client) DeleteAKeyFromAProvider(ctx context.Context, r DeleteAKeyFromAProviderReq) (GetASpecificKeyForAProviderRes, error) {
+	url := fmt.Sprintf("/api/providers/%s/keys/%s", r.Provider, r.KeyID)
+
+	args := httpHandlerArgs{
+		URL:         url,
+		Method:      DELETE,
+		Credentials: c.Credentials,
+	}
+	res, err := httpHandler(ctx, args)
+	if err != nil {
+		return GetASpecificKeyForAProviderRes{}, errors.Wrap(err, "Failed to delete a key from a provider")
+	}
+
+	var key GetASpecificKeyForAProviderRes
+	err = json.Unmarshal(res, &key)
+	if err != nil {
+		return GetASpecificKeyForAProviderRes{}, errors.Wrap(err, "Failed to unmarshal provider key data")
+	}
+
+	return key, nil
+}
